@@ -1,37 +1,36 @@
-name: J6-Kernel-Build (Hizli + GCC 4.9)
+name: J6-Kernel-Build (Final Fix)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # En hizli sira gelen surum
+    runs-on: ubuntu-22.04
     steps:
       - name: Kernel Kodlarini Cek
         uses: actions/checkout@v4
 
       - name: Eski Derleyiciyi Indir (GCC 4.9)
         run: |
+          # Samsung J6+ icin en saglam derleyici budur
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain
 
       - name: Paketleri ve Python2'yi Yukle
         run: |
           sudo apt update
-          # Ubuntu 22.04 icin gerekli tum paketler
           sudo apt install -y build-essential bc libncurses5 libncurses5-dev libssl-dev bison flex libelf-dev python2
-          
-          # Python komutunu Python2'ye yonlendiriyoruz (Kernel icin sart)
+          # Python 2'yi sisteme zorla tanitiyoruz
           sudo ln -sf /usr/bin/python2 /usr/bin/python
 
       - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
-          # Indirdigimiz ozel derleyiciyi kullaniyoruz
+          # Telefon icin indirdigimiz GCC 4.9'u kullaniyoruz
           export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/arm-linux-androideabi-
           
           make j6primelte_swa_open_defconfig
           
-          # Derleme baslasin
-          make -j$(nproc)
+          # ISTE COZUM BURADA: Hem eski derleyiciyi kullaniyoruz hem de host hatasini yamaliyoruz
+          make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
       - name: Dosyalari Hazirla
         run: |
