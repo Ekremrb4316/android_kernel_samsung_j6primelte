@@ -6,10 +6,10 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Kodları Çek
+      - name: Kodlari Cek
         uses: actions/checkout@v4
 
-      - name: Python Kur
+      - name: Python 2 Kur
         uses: actions/setup-python@v5
         with:
           python-version: '2.7'
@@ -19,21 +19,26 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi
 
-      - name: Derle
+      - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
           sudo ln -sf /usr/bin/python2.7 /usr/bin/python
+          sudo ln -sf /usr/bin/python2.7 /usr/bin/python2
           make j6primelte_swa_open_defconfig
           make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
-      - name: Yukle
+      - name: Dosyalari Hazirla
+        run: |
+          mkdir -p output
+          if [ -f arch/arm/boot/zImage-dtb ]; then cp arch/arm/boot/zImage-dtb output/; fi
+          if [ -f arch/arm/boot/zImage ]; then cp arch/arm/boot/zImage output/; fi
+
+      - name: Sonucu Yukle
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-Dosyasi
-          path: arch/arm/boot/zImage*
-          mkdir output
-          if [ -f arch/arm/boot/zImage-dtb ]; then
+          name: J6-Plus-Kernel
+          path: output/*
             cp arch/arm/boot/zImage-dtb output/
           elif [ -f arch/arm/boot/zImage ]; then
             cp arch/arm/boot/zImage output/
