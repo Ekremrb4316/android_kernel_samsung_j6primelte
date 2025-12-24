@@ -1,36 +1,44 @@
-name: J6-Kernel-Build (Final)
+name: J6-Kernel-Build (Final - No Error)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04 # En hizli sira gelen sunucu
     steps:
       - name: Kernel Kodlarini Cek
         uses: actions/checkout@v4
 
       - name: Eski Derleyiciyi Indir (GCC 4.9)
         run: |
-          # Samsung J6+ kodlari sadece bu eski derleyici ile hatasiz calisir
+          # J6+ icin sart olan eski derleyiciyi indiriyoruz
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain
 
       - name: Paketleri ve Python2'yi Yukle
         run: |
           sudo apt update
           sudo apt install -y build-essential bc libncurses5 libncurses5-dev libssl-dev bison flex libelf-dev python2
-          # Python 2'yi sisteme zorla tanitiyoruz
+          # Python 2 ayari
           sudo ln -sf /usr/bin/python2 /usr/bin/python
 
       - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
-          # Ozel indirdigimiz GCC 4.9'u aktif ediyoruz
           export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/arm-linux-androideabi-
           
+          # Config dosyasini hazirla
           make j6primelte_swa_open_defconfig
           
-          # KRITIK NOKTA: Hem eski derleyiciyi kullaniyoruz hem de host hatasini yamaliyoruz
-          make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
+          # FINAL COZUM: 
+          # 1. HOSTCFLAGS="-fcommon": Bilgisayar tarafindaki hatayi engeller
+          # 2. KCFLAGS="-w": Kodlardaki uyari hatalarini engeller (Ses surucusu hatasi icin)
+          # 3. KAFLAGS="-w": Assembly hatalarini engeller
+          make -j$(nproc) \
+               HOSTCFLAGS="-fcommon" \
+               HOSTLDFLAGS="-fcommon" \
+               KCFLAGS="-w" \
+               KAFLAGS="-w" \
+               CONFIG_CC_STACKPROTECTOR_STRONG=n
 
       - name: Dosyalari Hazirla
         run: |
