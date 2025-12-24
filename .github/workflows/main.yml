@@ -19,7 +19,7 @@ jobs:
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
           # Klasördeki defconfig adını kontrol et (Örn: msm8917_defconfig veya j6primelte_defconfig)
-          make j6primelte_defconfig 
+          make j6primelte_swa_open_defconfig 
           make -j$(nproc)
 
       - name: Dosyayı Hazırla
