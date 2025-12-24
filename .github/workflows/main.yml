@@ -1,10 +1,10 @@
-name: Kernel Derleyici (J6 Plus 32-bit)
+name: Kernel Derleyici (J6 Plus 32-bit - Fix)
 on:
-  workflow_dispatch: # Manuel başlatmak için
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Kodları Çek
         uses: actions/checkout@v4
@@ -12,20 +12,19 @@ jobs:
       - name: Bağımlılıkları Kur
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi
+          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi python2
 
       - name: Derlemeyi Başlat
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          # Senin bulduğun tam dosya adını buraya yazdık:
+          sudo ln -sf /usr/bin/python2 /usr/bin/python
           make j6primelte_swa_open_defconfig
-          make -j$(nproc)
+          make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
       - name: Dosyayı Hazırla
         run: |
           mkdir output
-          # 32-bit ARM çıktısı genellikle zImage veya zImage-dtb olur
           if [ -f arch/arm/boot/zImage-dtb ]; then
             cp arch/arm/boot/zImage-dtb output/
           elif [ -f arch/arm/boot/zImage ]; then
