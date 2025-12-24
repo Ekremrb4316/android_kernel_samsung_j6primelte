@@ -9,22 +9,21 @@ jobs:
       - name: Kodlari Cek
         uses: actions/checkout@v4
 
-      - name: Python 2 Kur
-        uses: actions/setup-python@v5
-        with:
-          python-version: '2.7'
-
       - name: Paketleri Yukle
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi
+          # Python2'yi apt üzerinden kuruyoruz
+          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi python2
 
       - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          sudo ln -sf /usr/bin/python2.7 /usr/bin/python
-          sudo ln -sf /usr/bin/python2.7 /usr/bin/python2
+          
+          # Python2 komutunu garantiye alıyoruz (Hatanın çözümü burada)
+          sudo ln -sf /usr/bin/python2 /usr/bin/python
+          
+          # Derleme komutları
           make j6primelte_swa_open_defconfig
           make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
