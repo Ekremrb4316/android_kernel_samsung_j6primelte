@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Kodları Çek
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # v3'ten v4'e güncellendi
 
       - name: Bağımlılıkları Kur
         run: |
@@ -18,14 +18,13 @@ jobs:
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          # Klasördeki defconfig adını buraya tam yaz (Örn: msm8917_defconfig)
+          # Klasördeki defconfig adını kontrol et (Örn: msm8917_defconfig veya j6primelte_defconfig)
           make j6primelte_defconfig 
           make -j$(nproc)
 
       - name: Dosyayı Hazırla
         run: |
           mkdir output
-          # 32-bit ARM kernel çıktısı genelde zImage-dtb olur
           if [ -f arch/arm/boot/zImage-dtb ]; then
             cp arch/arm/boot/zImage-dtb output/
           elif [ -f arch/arm/boot/zImage ]; then
@@ -33,7 +32,10 @@ jobs:
           fi
 
       - name: Sonucu Yükle
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # İşte burası v4 olarak güncellendi
+        with:
+          name: J6-Plus-32Bit-Kernel
+          path: output/*
         with:
           name: J6-Plus-32Bit-Kernel
           path: output/*
