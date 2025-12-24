@@ -1,25 +1,35 @@
-name: Kernel Derleyici (J6 Plus 32-bit - Fix)
+name: Kernel Derleyici (J6 Plus - Ubuntu 22.04 Fix)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04 # Daha güncel sürüm
     steps:
       - name: Kodları Çek
         uses: actions/checkout@v4
 
+      - name: Python 2 Kur (Eski kernel için gerekli)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '2.7' # Python 2'yi otomatik kurar
+
       - name: Bağımlılıkları Kur
         run: |
           sudo apt update
-          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi python2
+          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi
 
       - name: Derlemeyi Başlat
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          sudo ln -sf /usr/bin/python2 /usr/bin/python
+          
+          # Python 2'yi sisteme tanıt
+          sudo ln -sf /usr/bin/python2.7 /usr/bin/python
+          sudo ln -sf /usr/bin/python2.7 /usr/bin/python2
+          
           make j6primelte_swa_open_defconfig
+          # -fcommon hatayı önlemek için kritik
           make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
       - name: Dosyayı Hazırla
@@ -34,5 +44,7 @@ jobs:
       - name: Sonucu Yükle
         uses: actions/upload-artifact@v4
         with:
+          name: J6-Plus-NetHunter-Kernel
+          path: output/*
           name: J6-Plus-NetHunter-Kernel
           path: output/*
