@@ -1,13 +1,13 @@
-name: Kernel Derleyici (32-bit ARM)
+name: Kernel Derleyici (J6 Plus 32-bit)
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Manuel başlatmak için
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Kodları Çek
-        uses: actions/checkout@v4 # v3'ten v4'e güncellendi
+        uses: actions/checkout@v4
 
       - name: Bağımlılıkları Kur
         run: |
@@ -18,13 +18,14 @@ jobs:
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          # Klasördeki defconfig adını kontrol et (Örn: msm8917_defconfig veya j6primelte_defconfig)
-          make j6primelte_swa_open_defconfig 
+          # Senin bulduğun tam dosya adını buraya yazdık:
+          make j6primelte_swa_open_defconfig
           make -j$(nproc)
 
       - name: Dosyayı Hazırla
         run: |
           mkdir output
+          # 32-bit ARM çıktısı genellikle zImage veya zImage-dtb olur
           if [ -f arch/arm/boot/zImage-dtb ]; then
             cp arch/arm/boot/zImage-dtb output/
           elif [ -f arch/arm/boot/zImage ]; then
@@ -32,7 +33,7 @@ jobs:
           fi
 
       - name: Sonucu Yükle
-        uses: actions/upload-artifact@v4 # İşte burası v4 olarak güncellendi
+        uses: actions/upload-artifact@v4
         with:
-          name: J6-Plus-32Bit-Kernel
+          name: J6-Plus-NetHunter-Kernel
           path: output/*
