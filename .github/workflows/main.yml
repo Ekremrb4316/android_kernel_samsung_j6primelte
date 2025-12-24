@@ -1,39 +1,37 @@
-name: Kernel Derleyici (J6 Plus - Ubuntu 22.04 Fix)
+name: J6-Kernel-Build
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # Daha güncel sürüm
+    runs-on: ubuntu-22.04
     steps:
       - name: Kodları Çek
         uses: actions/checkout@v4
 
-      - name: Python 2 Kur (Eski kernel için gerekli)
+      - name: Python Kur
         uses: actions/setup-python@v5
         with:
-          python-version: '2.7' # Python 2'yi otomatik kurar
+          python-version: '2.7'
 
-      - name: Bağımlılıkları Kur
+      - name: Paketleri Yukle
         run: |
           sudo apt update
           sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi
 
-      - name: Derlemeyi Başlat
+      - name: Derle
         run: |
           export ARCH=arm
           export CROSS_COMPILE=arm-linux-gnueabi-
-          
-          # Python 2'yi sisteme tanıt
           sudo ln -sf /usr/bin/python2.7 /usr/bin/python
-          sudo ln -sf /usr/bin/python2.7 /usr/bin/python2
-          
           make j6primelte_swa_open_defconfig
-          # -fcommon hatayı önlemek için kritik
           make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
-      - name: Dosyayı Hazırla
-        run: |
+      - name: Yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Dosyasi
+          path: arch/arm/boot/zImage*
           mkdir output
           if [ -f arch/arm/boot/zImage-dtb ]; then
             cp arch/arm/boot/zImage-dtb output/
