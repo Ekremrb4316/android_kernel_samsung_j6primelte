@@ -39,15 +39,3 @@ jobs:
         with:
           name: J6-Plus-Kernel
           path: output/*
-            cp arch/arm/boot/zImage-dtb output/
-          elif [ -f arch/arm/boot/zImage ]; then
-            cp arch/arm/boot/zImage output/
-          fi
-
-      - name: Sonucu Yükle
-        uses: actions/upload-artifact@v4
-        with:
-          name: J6-Plus-NetHunter-Kernel
-          path: output/*
-          name: J6-Plus-NetHunter-Kernel
-          path: output/*
