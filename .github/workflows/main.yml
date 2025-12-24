@@ -1,4 +1,4 @@
-name: J6-Kernel-Build (Final Fix)
+name: J6-Kernel-Build (Final)
 on:
   workflow_dispatch:
 
@@ -11,7 +11,7 @@ jobs:
 
       - name: Eski Derleyiciyi Indir (GCC 4.9)
         run: |
-          # Samsung J6+ icin en saglam derleyici budur
+          # Samsung J6+ kodlari sadece bu eski derleyici ile hatasiz calisir
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain
 
       - name: Paketleri ve Python2'yi Yukle
@@ -24,12 +24,12 @@ jobs:
       - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
-          # Telefon icin indirdigimiz GCC 4.9'u kullaniyoruz
+          # Ozel indirdigimiz GCC 4.9'u aktif ediyoruz
           export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/arm-linux-androideabi-
           
           make j6primelte_swa_open_defconfig
           
-          # ISTE COZUM BURADA: Hem eski derleyiciyi kullaniyoruz hem de host hatasini yamaliyoruz
+          # KRITIK NOKTA: Hem eski derleyiciyi kullaniyoruz hem de host hatasini yamaliyoruz
           make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
 
       - name: Dosyalari Hazirla
