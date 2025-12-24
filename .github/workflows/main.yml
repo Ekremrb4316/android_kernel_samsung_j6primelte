@@ -1,24 +1,22 @@
-name: J6-Kernel-Build (Final - No Error)
+name: J6-Kernel-Build (Ultimate-Fix)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04 # En hizli sira gelen sunucu
+    runs-on: ubuntu-22.04
     steps:
       - name: Kernel Kodlarini Cek
         uses: actions/checkout@v4
 
       - name: Eski Derleyiciyi Indir (GCC 4.9)
         run: |
-          # J6+ icin sart olan eski derleyiciyi indiriyoruz
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain
 
       - name: Paketleri ve Python2'yi Yukle
         run: |
           sudo apt update
           sudo apt install -y build-essential bc libncurses5 libncurses5-dev libssl-dev bison flex libelf-dev python2
-          # Python 2 ayari
           sudo ln -sf /usr/bin/python2 /usr/bin/python
 
       - name: Derlemeyi Baslat
@@ -26,28 +24,29 @@ jobs:
           export ARCH=arm
           export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/arm-linux-androideabi-
           
-          # Config dosyasini hazirla
+          # 1. Defconfig oluştur
           make j6primelte_swa_open_defconfig
           
-          # FINAL COZUM: 
-          # 1. HOSTCFLAGS="-fcommon": Bilgisayar tarafindaki hatayi engeller
-          # 2. KCFLAGS="-w": Kodlardaki uyari hatalarini engeller (Ses surucusu hatasi icin)
-          # 3. KAFLAGS="-w": Assembly hatalarini engeller
+          # 2. Hataları engellemek için config'e doğrudan müdahale
+          sed -i 's/CONFIG_CC_STACKPROTECTOR_STRONG=y/CONFIG_CC_STACKPROTECTOR_STRONG=n/g' .config
+          
+          # 3. Derleme (Extra flaglar eklendi)
           make -j$(nproc) \
                HOSTCFLAGS="-fcommon" \
                HOSTLDFLAGS="-fcommon" \
-               KCFLAGS="-w" \
-               KAFLAGS="-w" \
-               CONFIG_CC_STACKPROTECTOR_STRONG=n
+               KCFLAGS="-w -fno-pic" \
+               KAFLAGS="-w"
 
       - name: Dosyalari Hazirla
         run: |
           mkdir -p output
-          if [ -f arch/arm/boot/zImage-dtb ]; then cp arch/arm/boot/zImage-dtb output/; fi
-          if [ -f arch/arm/boot/zImage ]; then cp arch/arm/boot/zImage output/; fi
+          # zImage-dtb veya zImage kontrolü
+          [ -f arch/arm/boot/zImage-dtb ] && cp arch/arm/boot/zImage-dtb output/
+          [ -f arch/arm/boot/zImage ] && cp arch/arm/boot/zImage output/
+          [ -f arch/arm/boot/dtbo.img ] && cp arch/arm/boot/dtbo.img output/
 
       - name: Sonucu Yukle
         uses: actions/upload-artifact@v4
         with:
-          name: J6-Plus-NetHunter-Kernel
+          name: J6-Plus-Kernel-Final
           path: output/*
