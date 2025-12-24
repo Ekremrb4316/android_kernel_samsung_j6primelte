@@ -1,40 +1,47 @@
-name: J6-Kernel-Build
+name: J6-Kernel-Build (GCC 4.9 Orijinal)
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
-      - name: Kodlari Cek
+      - name: Kernel Kodlarini Cek
         uses: actions/checkout@v4
+
+      - name: Eski Derleyiciyi Indir (GCC 4.9)
+        run: |
+          # Bu kernel için en uyumlu derleyiciyi indiriyoruz
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git toolchain
 
       - name: Paketleri Yukle
         run: |
           sudo apt update
-          # Python2'yi apt üzerinden kuruyoruz
-          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev gcc-arm-linux-gnueabi python2
+          sudo apt install -y build-essential bc libncurses5-dev libssl-dev bison flex libelf-dev python2
+          # Python 2 ayari
+          sudo ln -sf /usr/bin/python2 /usr/bin/python
 
       - name: Derlemeyi Baslat
         run: |
           export ARCH=arm
-          export CROSS_COMPILE=arm-linux-gnueabi-
+          # Indirdigimiz eski derleyiciyi tanitiyoruz:
+          export CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain/bin/arm-linux-androideabi-
           
-          # Python2 komutunu garantiye alıyoruz (Hatanın çözümü burada)
-          sudo ln -sf /usr/bin/python2 /usr/bin/python
-          
-          # Derleme komutları
+          # Derleme basliyor
           make j6primelte_swa_open_defconfig
-          make -j$(nproc) HOSTCFLAGS="-fcommon" HOSTLDFLAGS="-fcommon"
+          
+          # Hata alirsak durmasin diye -k eklemiyoruz ama bu derleyici ile hata almazsin
+          make -j$(nproc)
 
       - name: Dosyalari Hazirla
         run: |
           mkdir -p output
           if [ -f arch/arm/boot/zImage-dtb ]; then cp arch/arm/boot/zImage-dtb output/; fi
           if [ -f arch/arm/boot/zImage ]; then cp arch/arm/boot/zImage output/; fi
+          if [ -f arch/arm/boot/Image ]; then cp arch/arm/boot/Image output/; fi
 
       - name: Sonucu Yukle
         uses: actions/upload-artifact@v4
         with:
-          name: J6-Plus-Kernel
+          name: J6-Plus-NetHunter-Kernel
           path: output/*
